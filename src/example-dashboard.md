@@ -4,7 +4,19 @@ title: Example dashboard
 toc: false
 ---
 
+
+<style type="text/css">
+
+
+.countrydot {
+  cursor: pointer;
+}
+
+</style>
+
+
 # Rocket launches 🚀
+
 
 <!-- Load and transform the data -->
 
@@ -23,6 +35,86 @@ const color = Plot.scale({
   }
 });
 ```
+
+```js
+
+const data = [
+  {
+    x: 1,
+    y: 1,
+    state: "SE"
+  },
+  {
+    x: 3,
+    y: 3,
+    state: "DK"
+  }
+]
+
+const countries = Mutable(['SE']);
+const addOrRemoveCountry = (country) => {
+  if (countries.value.includes(country)) {
+    countries.value = countries.value.filter((c) => c !== country);
+  } else {
+    countries.value = [...countries.value, country];
+  }
+}
+```
+
+```js
+const addClick = (index, scales, values, dimensions, context, next) => {
+  const el = next(index, scales, values, dimensions, context);
+  const circles = el.querySelectorAll("circle");
+  for (let i = 0; i < circles.length; i++) {
+    const d = {index: index[i], x: values.channels.x.value[i], y: values.channels.y.value[i]};
+    circles[i].addEventListener("click", () => {
+      const code = data[d.index].state
+      addOrRemoveCountry(code);
+      // alert(`Added ${JSON.stringify(d)} (${d.x}, ${d.y})`);
+      el.classList.add("selected");
+    });
+  }
+  return el;
+}
+```
+
+```js
+countries
+```
+
+```js
+// 2D plot with SE at (1,1)
+function plot2D(data, {width}) {
+  return Plot.plot({
+    width,
+    height: 300,
+    // start at 0,0 go to 3,3
+    x: {label: "x"},
+    y: {label: "y"},
+    marks: [
+      Plot.ruleY([0]),
+      Plot.dot(data, {x: "x", y: "y", fill: "state", size: 200, title: "state", render: addClick,
+       r: 10, 
+      className: `countrydot`
+      }),
+      Plot.text(data, {x: "x", y: "y", text: "state", dy: "-0.5em", dx: "-0.5em", color: "white", font: "bold 10px sans-serif", pointerEvents: "none"}),
+      Plot.tip(olympians, Plot.pointer({
+        x: "x",
+        y: "y",
+        title: (d) => d.state
+      }))
+    ]
+  });
+}
+```
+
+```js
+plot2D(data, {width: 600})
+
+```
+
+
+
 
 <!-- Cards with big numbers -->
 
