@@ -22,6 +22,9 @@ toc: false
 
 ```js
 const launches = FileAttachment("data/launches.csv").csv({typed: true});
+const pcaQ1 = FileAttachment("data/PCAVOL_A_QC1.csv").csv({typed: true});
+const pcaQ2 = FileAttachment("data/PCAVOL_A_QC2.csv").csv({typed: true});
+const pcaQ3 = FileAttachment("data/PCAVOL_A_QC3_1.csv").csv({typed: true});
 ```
 
 <!-- A shared color scale for consistency, sorted by the number of launches -->
@@ -113,9 +116,62 @@ plot2D(data, {width: 600})
 
 ```
 
+```js
+const pca_data = {
+  Q1 : { 
+    question_id: "Q1",
+    question_pca: pcaQ1
+  },
+  Q2: { 
+    question_id: "Q2",
+    question_pca: pcaQ2
+  },
+  Q3: { 
+    question_id: "Q3",
+    question_pca: pcaQ3
+  },
+}
+
+const question = view(Inputs.checkbox(["Q1", "Q2", "Q3"], {label: "question"}));
+
+```
+
+<div class="grid grid-cols-2">   
+  <div class="card">
+  ${question}
+  </div>
+  <div class="card">    
+  ${resize((width) => {      
+      const selectedPcaData = Object.values(pca_data)
+        .filter((d) => question.includes(d.question_id))
+        .map((d) => d.question_pca);
+      if (selectedPcaData.length == 0){
+        return pcaChart(pcaQ1, { width });
+      }
+      else{
+      return pcaChart(selectedPcaData[0], { width });
+      }
+    })}
+  </div>
+</div>
 
 
-
+```js
+  function pcaChart(data, {width}) {
+    return Plot.plot({
+      title: "Choose a question to show the data, Q1 is shown by  default.",
+      width,
+      grid: true,
+      x: {label: "Body mass (g)"},
+      y: {label: "Flipper length (mm)"},
+      color: {legend: true},
+      marks: [
+        //Plot.linearRegressionY(penguins, {x: "body_mass_g", y: "flipper_length_mm", stroke: "species"}),
+        Plot.dot(data, {x: "PC1", y: "PC2", stroke: "Countries", tip: true})
+      ]
+    });
+  }
+```
 <!-- Cards with big numbers -->
 
 <div class="grid grid-cols-4">

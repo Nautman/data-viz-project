@@ -1,0 +1,74 @@
+ID,SubID,Question_Text
+QC1,,What does a European Union energy policy mean to you? (MAX. 3 ANSWERS)
+QC2,,Should the European Union have a stronger coordination role on energy matters?
+QC2T,,Should the European Union have a stronger coordination role on energy matters?
+QC3,1,The European Union is aiming for climate neutrality by 2050. To what extent do you agree or disagree with the following statements? Implementing  climate neutrality target will…:-…contribute to Europe’s fight against climate change and to the protection of the environment (by e.g. reducing air pollution)
+QC3,2,"The European Union is aiming for climate neutrality by 2050. To what extent do you agree or disagree with the following statements? Implementing  climate neutrality target will…:-….foster citizens, communities and businesses to be part of the clean energy transition"
+QC3,3,The European Union is aiming for climate neutrality by 2050. To what extent do you agree or disagree with the following statements? Implementing  climate neutrality target will…:-…reduce dependence on energy imports
+QC3,4,The European Union is aiming for climate neutrality by 2050. To what extent do you agree or disagree with the following statements? Implementing  climate neutrality target will…:-…spur new jobs and attract investments in the clean energy sectors
+QC3,5,The European Union is aiming for climate neutrality by 2050. To what extent do you agree or disagree with the following statements? Implementing  climate neutrality target will…:-…ensure reduced energy bills for households and businesses
+QC4a,,"In your view, to reach climate neutrality by 2050, which energy-related measures should be prioritised? Firstly?"
+QC4b,,And then?
+QC4T,,"In your view, to reach climate neutrality by 2050, which energy-related measures should be prioritised? Firstly? And then?"
+QC5a,,"From the list below, what do you think the European Union should encourage its Members States to focus on to ensure that energy is affordable? Firstly?"
+QC5b,,And then?
+QC5T,,"From the list below, what do you think the European Union should encourage its Members States to focus on to ensure that energy is affordable? Firstly? And then?"
+QC6,,"From the list of energy-related measures below, what do you think is the most important way the European Union should help businesses to be competitive?"
+QC7,,"In the past five years, in what areas do you believe the European Union has provided added value for the Member States? (MAX. 3 ANSWERS)"
+QC8,1,How much have you changed your habits to reduce energy consumption in your daily life over the last five years …:-… at home?
+QC8,2,How much have you changed your habits to reduce energy consumption in your daily life over the last five years …:-… for transport?
+QC8,3,How much have you changed your habits to reduce energy consumption in your daily life over the last five years …:-… at work?
+QC9,,"In the last five years, were any measures undertaken in the place you live in to reduce its energy consumption?"
+QC9a,,Which measures were taken? (MULTIPLE ANSWERS POSSIBLE)
+QC9b,,What are the reasons why measures weren’t taken? (MULTIPLE ANSWERS POSSIBLE)
+QC10,,Have you ever joined or considered joining a renewable energy community?
+QC10T,,Have you ever joined or considered joining a renewable energy community?
+QC11,,"In the last five years, has the European energy label had an influence on your choice when purchasing an appliance?"
+QC11T,,"In the last five years, has the European energy label had an influence on your choice when purchasing an appliance?"
+QC12,,"In your opinion, which of the following energy-related issues should the European Union tackle as a priority over the next five years? (MAX. 3 ANSWERS)"
+QC12T,,"In your opinion, which of the following energy-related issues should the European Union tackle as a priority over the next five years?"
+D15a. What is your current occupation?,,
+D15a.2. Socio-professional category,,
+C14. Socio-professional category,,
+D15b. Did you do any paid work in the past? What was your last occupation?,,
+D15b.2. Previous socio-professional category,,
+"SD28. What sector, business or industry is the company or organisation where you work mainly active in?",,
+"SD29. Including yourself, how many people in total work at your workplace, that is at the local site where you work?",,
+D11. How old are you?,,
+D11R. How old are you?,,
+D7. Which of the following best corresponds to your own current situation? ,,
+D7R. Marital status,,
+D8. How old were you when you stopped full-time education?,,
+D8c. What is the highest level of education you completed?,,
+D10. How would you describe yourself?,,
+D25. Would you say you live in a...?,,
+"D40a. How many people aged 15 years or more live in your household, yourself included? ",,
+D40b. How many children less than 10 years old live in your household? ,,
+D40c. How many children aged 10 to 14 years old live in your household? ,,
+D40. Household composition,,
+D40R. One-person households composition,,
+"D60. During the last twelve months, would you say you had difficulties to pay your bills at the end of the month…?",,
+"D62.1. Could you tell if …? :-You use the Internet at home, in your home",,
+D62.2. Could you tell if …? :-You use the Internet on your place of work,,
+"D62.3. Could you tell if …? :-You use the Internet on your mobile device (laptop, smartphone, tablet, etc.)",,
+"D62.4. Could you tell if …? :-You use the Internet somewhere else (school, university, cyber-café, etc.)",,
+D62R. Use of the Internet,,
+D63. Do you see yourself and your household belonging to …?,,
+"D70. On the whole, are you very satisfied, fairly satisfied, not very satisfied or not at all satisfied with the life you lead?",,
+"D70a. On the whole, are you very satisfied, fairly satisfied, not very satisfied or not at all satisfied with your daily life?",,
+"D1. In political matters people talk of ""the left"" and ""the right"". How would you place your views on this scale?",,
+D1.2. Left-right political scale,,
+D1.3. Left-right political scale,,
+"D71.1. When you get together with friends or relatives, would you say you discuss frequently, occasionally or never about...? :-National political matters",,
+"D71.2. When you get together with friends or relatives, would you say you discuss frequently, occasionally or never about...? :-European political matters",,
+"D71.3. When you get together with friends or relatives, would you say you discuss frequently, occasionally or never about...? :-Local political matters",,
+C2. Political interest index,,
+"D78. In general, does the EU conjure up for you a very positive, fairly positive, neutral, fairly negative or very negative image?",,
+"D73.1. At the present time, would you say that, in general, things are going in the right direction or in the wrong direction, in…?:-(OUR COUNTRY)",,
+"D73.2. At the present time, would you say that, in general, things are going in the right direction or in the wrong direction, in…?:-The European Union",,
+"D73.3. At the present time, would you say that, in general, things are going in the right direction or in the wrong direction, in…?:-Your life personally",,
+"SD18a. On the whole, are you very satisfied, fairly satisfied, not very satisfied or not at all satisfied with the way democracy works in (OUR COUNTRY)?",,
+SD18b. And how about the way democracy works in the EU?,,
+D72.1. To what extent do you agree or disagree with each of the following statements. :-My voice counts in the EU,,
+D72.2. To what extent do you agree or disagree with each of the following statements. :-My voice counts in (OUR COUNTRY),,
+"SD20. Generally speaking, do you think that the life of those in the EU who are children today will be easier, more difficult or about the same as the life of those from your own generation?",,
