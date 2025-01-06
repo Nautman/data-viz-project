@@ -245,3 +245,41 @@ function vehicleChart(data, {width}) {
 </div>
 
 Data: Jonathan C. McDowell, [General Catalog of Artificial Space Objects](https://planet4589.org/space/gcat)
+
+
+
+
+<!-- Simple Axis Graph -->
+
+```js
+
+// Load the energy data from the CSV file
+const energy_data = await FileAttachment("data/2022_EU_energy_consumption.csv").csv({typed: true});
+
+
+// Define the country energy consumption graph function
+function countryEnergyGraph(data, {width} = {}) {
+  return Plot.plot({
+    title: "Energy Consumption by Country (Solid Fossil Fuels)",
+    width,
+    height: 500,
+    marginLeft: 100, // Space for country labels
+    x: {label: "Energy Consumption (Thousand Tonnes of Oil Equivalent)", grid: true},
+    y: {label: "Country", domain: data.map(d => d.geo), axis: "left", tickSize: 5}, // Country names on y-axis
+    marks: [
+      Plot.barX(data, {x: "OBS_VALUE", y: "geo", fill: "steelblue"}), // Horizontal bar for energy consumption
+      Plot.text(data, {x: "OBS_VALUE", y: "geo", text: d => d.OBS_VALUE.toFixed(1), dx: 5}) // Add text labels
+    ]
+  });
+}
+
+// Filter the dataset for solid fossil fuels
+const solidFossilFuelsData = energy_data.filter(d => d.siec === "Solid fossil fuels");
+
+```
+
+<div class="grid grid-cols-1">
+  <div class="card">
+    ${resize((width) => countryEnergyGraph(solidFossilFuelsData, {width}))}
+  </div>
+</div>
