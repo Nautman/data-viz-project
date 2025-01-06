@@ -249,52 +249,103 @@ Data: Jonathan C. McDowell, [General Catalog of Artificial Space Objects](https:
 
 
 
-<!-- Simple Axis Graph -->
+<!-- Energy Consumption Graph -->
 
 ```js
 
+// Load the energy data from the CSV file
 const energy_data = await FileAttachment("data/2022_EU_energy_consumption.csv").csv({typed: true});
 
-// Define the country energy consumption graph function with an average bar
-function countryEnergyGraph(data, {width} = {}) {
+// Get unique energy sources
+const uniqueSources = [...new Set(energy_data.map(d => d.siec))];
 
-  // Calculate the average energy consumption for the selected category (e.g., Solid fossil fuels)
-  const averageConsumption = d3.mean(data, d => d.OBS_VALUE);
+// Initialize selected energy source
+let selectedSource = "Solid fossil fuels"; // Default selection
 
-  // Add the average as a separate data point at the bottom of the bar chart
-  const extendedData = [...data, {geo: "EU Average", OBS_VALUE: averageConsumption}];
+// Find the dashboard div
+const dashboardDiv = document.getElementById("energy-dashboard");
 
-  return Plot.plot({
-    title: "Energy Consumption by Country (Solid Fossil Fuels)",
-    width,
+// Create a container for the dropdown and graph
+const container = document.createElement("div");
+
+// Add a title above the dropdown
+const title = document.createElement("h2");
+title.textContent = "Energy Consumption per EU Country";
+title.style.marginBottom = "10px";
+title.style.fontSize = "30px";
+title.style.fontWeight = "bold";
+container.appendChild(title);
+
+// Add small instruction text above the dropdown
+const small_text = document.createElement("h2");
+small_text.textContent = "Select which type of energy you wish to see for all EU countries";
+small_text.style.marginBottom = "10px";
+small_text.style.fontSize = "15px";
+container.appendChild(small_text);
+
+// Create the dropdown menu
+const dropdown = document.createElement("select");
+dropdown.style.marginBottom = "20px";
+dropdown.style.padding = "8px 12px";
+dropdown.style.fontSize = "16px";
+dropdown.style.border = "1px solid #007BFF";
+dropdown.style.borderRadius = "5px";
+
+// Populate the dropdown with energy sources
+uniqueSources.forEach(source => {
+  const option = document.createElement("option");
+  option.value = source;
+  option.textContent = source;
+  if (source === selectedSource) option.selected = true;
+  dropdown.appendChild(option);
+});
+
+// Dropdown change event
+dropdown.onchange = () => {
+  selectedSource = dropdown.value;
+  renderGraph(); // Re-render the graph when a new source is selected
+};
+
+// Add the dropdown to the container
+container.appendChild(dropdown);
+
+// Create a container for the graph
+const graphContainer = document.createElement("div");
+container.appendChild(graphContainer);
+
+// Append the entire container to the dashboard div
+dashboardDiv.appendChild(container);
+
+// Define the graph rendering function
+function renderGraph() {
+  // Filter data for the selected energy source
+  const filteredData = energy_data.filter(d => d.siec === selectedSource);
+
+  // Calculate the average energy consumption
+  const averageConsumption = d3.mean(filteredData, d => d.OBS_VALUE);
+  const extendedData = [...filteredData, {geo: "EU Average", OBS_VALUE: averageConsumption}];
+
+  // Render the graph using Plot
+  const plot = Plot.plot({
+    title: `Energy Consumption by Country (${selectedSource})`,
+    width: 800,
     height: 600,
-    marginLeft: 100, // Space for country labels
+    marginLeft: 100,
     x: {label: "Energy Consumption (Thousand Tonnes of Oil Equivalent)", grid: true},
-    y: {label: "Country", domain: extendedData.map(d => d.geo), axis: "left", tickSize: 5}, // Country names on y-axis
+    y: {label: "Country", domain: extendedData.map(d => d.geo), axis: "left", tickSize: 5},
     marks: [
-      // Bars for individual countries
-      Plot.barX(data, {x: "OBS_VALUE", y: "geo", fill: "steelblue"}),
-      
-      // Bar for the EU average
-      Plot.barX([{geo: "EU Average", OBS_VALUE: averageConsumption}], {
-        x: "OBS_VALUE",
-        y: "geo",
-        fill: "orange" // Different color for the average
-      }),
-
-      // Text labels for the bars
-      Plot.text(extendedData, {x: "OBS_VALUE", y: "geo", text: d => d.OBS_VALUE.toFixed(1), dx: 5})
+      Plot.barX(filteredData, {x: "OBS_VALUE", y: "geo", fill: "steelblue"}), // Bars for countries
+      Plot.barX([{geo: "EU Average", OBS_VALUE: averageConsumption}], {x: "OBS_VALUE", y: "geo", fill: "orange"}) // EU average bar
     ]
   });
+
+  // Clear previous graph and append the new one
+  graphContainer.innerHTML = "";
+  graphContainer.appendChild(plot);
 }
 
-// Filter the dataset for solid fossil fuels
-const solidFossilFuelsData = energy_data.filter(d => d.siec === "Solid fossil fuels");
+// Initial render
+renderGraph();
 
 ```
-
-<div class="grid grid-cols-1">
-  <div class="card">
-    ${resize((width) => countryEnergyGraph(solidFossilFuelsData, {width}))}
-  </div>
-</div>
+<div id="energy-dashboard"></div>
