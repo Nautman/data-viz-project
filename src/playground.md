@@ -253,22 +253,37 @@ Data: Jonathan C. McDowell, [General Catalog of Artificial Space Objects](https:
 
 ```js
 
-// Load the energy data from the CSV file
 const energy_data = await FileAttachment("data/2022_EU_energy_consumption.csv").csv({typed: true});
 
-
-// Define the country energy consumption graph function
+// Define the country energy consumption graph function with an average bar
 function countryEnergyGraph(data, {width} = {}) {
+
+  // Calculate the average energy consumption for the selected category (e.g., Solid fossil fuels)
+  const averageConsumption = d3.mean(data, d => d.OBS_VALUE);
+
+  // Add the average as a separate data point at the bottom of the bar chart
+  const extendedData = [...data, {geo: "EU Average", OBS_VALUE: averageConsumption}];
+
   return Plot.plot({
     title: "Energy Consumption by Country (Solid Fossil Fuels)",
     width,
-    height: 500,
+    height: 600,
     marginLeft: 100, // Space for country labels
     x: {label: "Energy Consumption (Thousand Tonnes of Oil Equivalent)", grid: true},
-    y: {label: "Country", domain: data.map(d => d.geo), axis: "left", tickSize: 5}, // Country names on y-axis
+    y: {label: "Country", domain: extendedData.map(d => d.geo), axis: "left", tickSize: 5}, // Country names on y-axis
     marks: [
-      Plot.barX(data, {x: "OBS_VALUE", y: "geo", fill: "steelblue"}), // Horizontal bar for energy consumption
-      Plot.text(data, {x: "OBS_VALUE", y: "geo", text: d => d.OBS_VALUE.toFixed(1), dx: 5}) // Add text labels
+      // Bars for individual countries
+      Plot.barX(data, {x: "OBS_VALUE", y: "geo", fill: "steelblue"}),
+      
+      // Bar for the EU average
+      Plot.barX([{geo: "EU Average", OBS_VALUE: averageConsumption}], {
+        x: "OBS_VALUE",
+        y: "geo",
+        fill: "orange" // Different color for the average
+      }),
+
+      // Text labels for the bars
+      Plot.text(extendedData, {x: "OBS_VALUE", y: "geo", text: d => d.OBS_VALUE.toFixed(1), dx: 5})
     ]
   });
 }
