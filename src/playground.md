@@ -254,53 +254,80 @@ Data: Jonathan C. McDowell, [General Catalog of Artificial Space Objects](https:
 ```js
 
 // Load the energy data from the CSV file
-const energy_data = await FileAttachment("data/2022_EU_energy_consumption.csv").csv({typed: true});
+const energy_data = await FileAttachment("data/2020-2023_EU_energy_consumption.csv").csv({typed: true});
 
-// Get unique energy sources
+// Get unique energy sources and years
 const uniqueSources = [...new Set(energy_data.map(d => d.siec))];
+const uniqueYears = [...new Set(energy_data.map(d => d.TIME_PERIOD))].sort(); // Sort years for proper order
 
-// Initialize selected energy source
-let selectedSource = "Solid fossil fuels"; // Default selection
+// Initialize selected year and energy source
+let selectedYear = 2022; // Default year
+let selectedSource = "Solid fossil fuels"; // Default energy source
 
 // Find the dashboard div
 const dashboardDiv = document.getElementById("energy-dashboard");
 
-// Create a container for the title, dropdown, and graph
+// Create a container for the title, dropdowns, and graph
 const container = document.createElement("div");
 
-// Add a title above the dropdown
+// Add a title above the dropdowns
 const title = document.createElement("h2");
-title.textContent = "Energy Consumption per EU Country (2022)";
+title.textContent = "Energy Consumption per EU Country";
 title.style.marginBottom = "10px";
 title.style.fontSize = "18px";
 title.style.fontWeight = "bold";
 container.appendChild(title);
 
-// Create the dropdown menu
-const dropdown = document.createElement("select");
-dropdown.style.marginBottom = "20px";
-dropdown.style.padding = "8px 12px";
-dropdown.style.fontSize = "16px";
-dropdown.style.border = "1px solid #007BFF";
-dropdown.style.borderRadius = "5px";
+// Create the year dropdown menu
+const yearDropdown = document.createElement("select");
+yearDropdown.style.marginBottom = "10px";
+yearDropdown.style.marginRight = "20px";
+yearDropdown.style.padding = "8px 12px";
+yearDropdown.style.fontSize = "16px";
+yearDropdown.style.border = "1px solid #007BFF";
+yearDropdown.style.borderRadius = "5px";
 
-// Populate the dropdown with energy sources
+// Populate the year dropdown
+uniqueYears.forEach(year => {
+  const option = document.createElement("option");
+  option.value = year;
+  option.textContent = year;
+  if (year === selectedYear) option.selected = true;
+  yearDropdown.appendChild(option);
+});
+
+// Year dropdown change event
+yearDropdown.onchange = () => {
+  selectedYear = +yearDropdown.value; // Update the selected year
+  renderGraph(); // Re-render the graph when a new year is selected
+};
+
+// Create the energy source dropdown menu
+const sourceDropdown = document.createElement("select");
+sourceDropdown.style.marginBottom = "20px";
+sourceDropdown.style.padding = "8px 12px";
+sourceDropdown.style.fontSize = "16px";
+sourceDropdown.style.border = "1px solid #007BFF";
+sourceDropdown.style.borderRadius = "5px";
+
+// Populate the energy source dropdown
 uniqueSources.forEach(source => {
   const option = document.createElement("option");
   option.value = source;
   option.textContent = source;
   if (source === selectedSource) option.selected = true;
-  dropdown.appendChild(option);
+  sourceDropdown.appendChild(option);
 });
 
-// Dropdown change event
-dropdown.onchange = () => {
-  selectedSource = dropdown.value;
+// Energy source dropdown change event
+sourceDropdown.onchange = () => {
+  selectedSource = sourceDropdown.value; // Update the selected energy source
   renderGraph(); // Re-render the graph when a new source is selected
 };
 
-// Add the dropdown to the container
-container.appendChild(dropdown);
+// Add the dropdowns to the container
+container.appendChild(yearDropdown);
+container.appendChild(sourceDropdown);
 
 // Create a container for the graph
 const graphContainer = document.createElement("div");
@@ -311,22 +338,30 @@ dashboardDiv.appendChild(container);
 
 // Define the graph rendering function
 function renderGraph() {
-  // Filter data for the selected energy source and exclude "European Union - 27 countries (from 2020)"
-  const filteredData = energy_data.filter(
-    d => d.siec === selectedSource && d.geo !== "European Union - 27 countries (from 2020)"
-  );
+  // Filter data for the selected energy source across all years
+  const dataForSource = energy_data.filter(d => d.siec === selectedSource && d.geo !== "European Union - 27 countries (from 2020)");
+  
+  // Get the maximum OBS_VALUE for the selected energy source
+  const maxConsumption = d3.max(dataForSource, d => d.OBS_VALUE);
 
-  // Calculate the average energy consumption
+  // Filter data for the selected year and energy source
+  const filteredData = dataForSource.filter(d => d.TIME_PERIOD === selectedYear);
+
+  // Calculate the average energy consumption for the selected year
   const averageConsumption = d3.mean(filteredData, d => d.OBS_VALUE);
   const extendedData = [...filteredData, {geo: "EU Average", OBS_VALUE: averageConsumption}];
 
   // Render the graph using Plot
   const plot = Plot.plot({
-    title: `Energy Consumption by Country (${selectedSource})`,
+    title: `Energy Consumption by Country (${selectedSource}, ${selectedYear})`,
     width: 800,
     height: 600,
     marginLeft: 100,
-    x: {label: "Energy Consumption (Thousand Tonnes of Oil Equivalent)", grid: true},
+    x: {
+      label: "Energy Consumption (Thousand Tonnes of Oil Equivalent)",
+      grid: true,
+      domain: [0, maxConsumption] // Set consistent axis maximum for all years
+    },
     y: {label: "Country", domain: extendedData.map(d => d.geo), axis: "left", tickSize: 5},
     marks: [
       Plot.barX(filteredData, {
