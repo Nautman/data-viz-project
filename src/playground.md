@@ -265,23 +265,16 @@ let selectedSource = "Solid fossil fuels"; // Default selection
 // Find the dashboard div
 const dashboardDiv = document.getElementById("energy-dashboard");
 
-// Create a container for the dropdown and graph
+// Create a container for the title, dropdown, and graph
 const container = document.createElement("div");
 
 // Add a title above the dropdown
 const title = document.createElement("h2");
-title.textContent = "Energy Consumption per EU Country";
+title.textContent = "Energy Consumption per EU Country (2022)";
 title.style.marginBottom = "10px";
-title.style.fontSize = "30px";
+title.style.fontSize = "18px";
 title.style.fontWeight = "bold";
 container.appendChild(title);
-
-// Add small instruction text above the dropdown
-const small_text = document.createElement("h2");
-small_text.textContent = "Select which type of energy you wish to see for all EU countries";
-small_text.style.marginBottom = "10px";
-small_text.style.fontSize = "15px";
-container.appendChild(small_text);
 
 // Create the dropdown menu
 const dropdown = document.createElement("select");
@@ -318,8 +311,10 @@ dashboardDiv.appendChild(container);
 
 // Define the graph rendering function
 function renderGraph() {
-  // Filter data for the selected energy source
-  const filteredData = energy_data.filter(d => d.siec === selectedSource);
+  // Filter data for the selected energy source and exclude "European Union - 27 countries (from 2020)"
+  const filteredData = energy_data.filter(
+    d => d.siec === selectedSource && d.geo !== "European Union - 27 countries (from 2020)"
+  );
 
   // Calculate the average energy consumption
   const averageConsumption = d3.mean(filteredData, d => d.OBS_VALUE);
@@ -334,8 +329,18 @@ function renderGraph() {
     x: {label: "Energy Consumption (Thousand Tonnes of Oil Equivalent)", grid: true},
     y: {label: "Country", domain: extendedData.map(d => d.geo), axis: "left", tickSize: 5},
     marks: [
-      Plot.barX(filteredData, {x: "OBS_VALUE", y: "geo", fill: "steelblue"}), // Bars for countries
-      Plot.barX([{geo: "EU Average", OBS_VALUE: averageConsumption}], {x: "OBS_VALUE", y: "geo", fill: "orange"}) // EU average bar
+      Plot.barX(filteredData, {
+        x: "OBS_VALUE",
+        y: "geo",
+        fill: "steelblue",
+        title: d => `${d.geo}: ${d.OBS_VALUE.toFixed(1)}` // Tooltip for individual countries
+      }),
+      Plot.barX([{geo: "EU Average", OBS_VALUE: averageConsumption}], {
+        x: "OBS_VALUE",
+        y: "geo",
+        fill: "orange",
+        title: d => `EU Average: ${d.OBS_VALUE.toFixed(1)}` // Tooltip for EU Average
+      })
     ]
   });
 
