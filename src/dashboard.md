@@ -14,10 +14,6 @@ toc: false
 
 </style>
 
-
-# Rocket launches 🚀
-
-
 <!-- Load and transform the data -->
 
 ```js
@@ -26,96 +22,7 @@ const pcaQ1 = FileAttachment("data/PCAVOL_A_QC1.csv").csv({typed: true});
 const pcaQ2 = FileAttachment("data/PCAVOL_A_QC2.csv").csv({typed: true});
 const pcaQ3 = FileAttachment("data/PCAVOL_A_QC3_1.csv").csv({typed: true});
 
-const questions = FileAttachment("data/questions.csv").csv({typed: true});
-```
-
-<!-- A shared color scale for consistency, sorted by the number of launches -->
-
-```js
-const color = Plot.scale({
-  color: {
-    type: "categorical",
-    domain: d3.groupSort(launches, (D) => -D.length, (d) => d.state).filter((d) => d !== "Other"),
-    unknown: "var(--theme-foreground-muted)"
-  }
-});
-```
-
-```js
-
-const data = [
-  {
-    x: 1,
-    y: 1,
-    state: "SE"
-  },
-  {
-    x: 3,
-    y: 3,
-    state: "DK"
-  }
-]
-
-const countries = Mutable(['SE']);
-const addOrRemoveCountry = (country) => {
-  if (countries.value.includes(country)) {
-    countries.value = countries.value.filter((c) => c !== country);
-  } else {
-    countries.value = [...countries.value, country];
-  }
-}
-```
-
-```js
-const addClick = (index, scales, values, dimensions, context, next) => {
-  const el = next(index, scales, values, dimensions, context);
-  const circles = el.querySelectorAll("circle");
-  for (let i = 0; i < circles.length; i++) {
-    const d = {index: index[i], x: values.channels.x.value[i], y: values.channels.y.value[i]};
-    circles[i].addEventListener("click", () => {
-      const code = data[d.index].state
-      addOrRemoveCountry(code);
-      // alert(`Added ${JSON.stringify(d)} (${d.x}, ${d.y})`);
-      el.classList.add("selected");
-    });
-  }
-  return el;
-}
-```
-
-```js
-countries
-```
-
-```js
-// 2D plot with SE at (1,1)
-function plot2D(data, {width}) {
-  return Plot.plot({
-    width,
-    height: 300,
-    // start at 0,0 go to 3,3
-    x: {label: "x"},
-    y: {label: "y"},
-    marks: [
-      Plot.ruleY([0]),
-      Plot.dot(data, {x: "x", y: "y", fill: "state", size: 200, title: "state", render: addClick,
-       r: 10, 
-      className: `countrydot`
-      }),
-      Plot.text(data, {x: "x", y: "y", text: "state", dy: "-0.5em", dx: "-0.5em", color: "white", font: "bold 10px sans-serif", pointerEvents: "none"}),
-      Plot.tip(olympians, Plot.pointer({
-        x: "x",
-        y: "y",
-        title: (d) => d.state
-      }))
-    ]
-  });
-}
-```
-
-```js
-plot2D(data, {width: 600})
-
+const all_questions = FileAttachment("data/questions.csv").csv({typed: true});
 ```
 ```js
 const pca_data = {
@@ -126,7 +33,7 @@ const pca_data = {
 
 const questions_to_display = ["QC1", "QC2", "QC3"];
 
-const dataDictionary = questions
+const questions_to_display_dict = all_questions
   .filter((q) => questions_to_display.includes(q.ID))
   .map((q) => {
     return {
@@ -136,32 +43,36 @@ const dataDictionary = questions
     };
   });
 
-console.log(questions);
-console.log(dataDictionary);
+console.log(all_questions);
+console.log(questions_to_display_dict);
+console.log(pca_data)
 
-let selectedQuestions = [];
+let user_selected_questions = [];
 
 const handleCheckboxChange = (event) => {
   const questionId = event.target.value;
   if (event.target.checked) {
-    selectedQuestions.push(questionId);
+    user_selected_questions.push(questionId);
   } else {
-    selectedQuestions = selectedQuestions.filter((id) => id !== questionId);
+    user_selected_questions = user_selected_questions.filter((id) => id !== questionId);
   }
   updatePcaChart();
 };
 
 const updatePcaChart = () => {
-  const selectedPcaData = selectedQuestions.map((id) => pca_data[id]);
+  const selectedPcaData = user_selected_questions.map((id) => pca_data[id]);
   const chartData = selectedPcaData.length > 0 ? selectedPcaData[0] : pcaQ1;
+  console.log(chartData[0]["Countries"])
   document.getElementById("pca-chart").innerHTML = "";
   document.getElementById("pca-chart").appendChild(pcaChart(chartData, { width: 600 }));
+  
 };
 ```
 
+```html
 <div class="grid grid-cols-2">
   <div class="card">
-    ${dataDictionary.map(
+    ${questions_to_display_dict.map(
       (d) => html`<div style="display: flex; align-items: center;">
   <input
     type="checkbox"
@@ -179,94 +90,91 @@ const updatePcaChart = () => {
     ${pcaChart(pcaQ1, { width: 600 })}
   </div>
 </div>
-
+```
 
 ```js
+  const user_selected_countries = []; // Store clicked dots here
+  const selectedCountriesContainer = document.getElementById("countries");
+    if (selectedCountriesContainer) {
+      selectedCountriesContainer.innerHTML = "<p>Selected Countries will show up here</p>";
+    } else {
+      console.error("Container with ID 'countries' not found");
+    }
+
   function pcaChart(data, {width}) {
-    return Plot.plot({
-      title: "Choose a question to show the data, Q1 is shown by  default.",
+    // Create the chart
+    const chart = Plot.plot({
+      title: "Choose a question to show the data, Q1 is shown by default.",
       width,
       grid: true,
-      x: {label: "Body mass (g)"},
-      y: {label: "Flipper length (mm)"},
-      color: {legend: true},
+      x: {label: "PCA 1"},
+      y: {label: "PCA 2"},
+      color: {legend: false},
       marks: [
-        //Plot.linearRegressionY(penguins, {x: "body_mass_g", y: "flipper_length_mm", stroke: "species"}),
-        Plot.dot(data, {x: "PC1", y: "PC2", stroke: "Countries", tip: true})
+        // Add dots with a fixed color
+        Plot.dot(data, {x: "PC1", y: "PC2", fill: "blue", r: 10}),
+        // Add text labels for country names
+        Plot.text(data, {x: "PC1", y: "PC2", text: "Countries", dx: 5, dy: -5}),
+        // Add horizontal and vertical lines through the origin
+        Plot.ruleX([0], {stroke: "grey", strokeWidth: 2}),
+        Plot.ruleY([0], {stroke: "grey", strokeWidth: 2}),
       ]
     });
+
+    // Add interactivity
+    const svg = chart.querySelector("svg");
+    const dots = svg.querySelectorAll("circle"); // Select dots
+    
+    
+    dots.forEach((dot, index) => {
+      // Bind data to each dot
+      dot.dataset.index = index;
+      dot.dataset.pc1 = data[index].PC1;
+      dot.dataset.pc2 = data[index].PC2;
+      dot.dataset.country = data[index].Countries;
+
+      // Add click event listener
+      dot.addEventListener("click", (event) => {
+        const target = event.target;
+        const clickedData = {
+          index: target.dataset.index,
+          PC1: target.dataset.pc1,
+          PC2: target.dataset.pc2,
+          country: target.dataset.country,
+        };
+      // Check if the country is already selected
+      const existingIndex = user_selected_countries.findIndex(
+        (d) => d.country === clickedData.country
+      );
+
+      if (existingIndex === -1) {
+        // If not, add it to the array
+        user_selected_countries.push(clickedData);
+      } else {
+        // If yes, remove it from the array
+        user_selected_countries.splice(existingIndex, 1);
+      }
+
+            // Update the UI dynamically
+        selectedCountriesContainer.innerHTML = user_selected_countries
+        .map((d) => `<div><p>${d.country}</p></div>`)
+        .join("");
+        // Perform an action (e.g., console log or update UI)
+        console.log("Dot clicked:", clickedData);
+        console.log("Selected Dots:", user_selected_countries)
+      });
+    });
+
+    return chart;
   }
 ```
-<!-- Cards with big numbers -->
 
-<div class="grid grid-cols-4">
-  <div class="card">
-    <h2>United States 🇺🇸</h2>
-    <span class="big">${launches.filter((d) => d.stateId === "US").length.toLocaleString("en-US")}</span>
-  </div>
-  <div class="card">
-    <h2>Russia 🇷🇺 <span class="muted">/ Soviet Union</span></h2>
-    <span class="big">${launches.filter((d) => d.stateId === "SU" || d.stateId === "RU").length.toLocaleString("en-US")}</span>
-  </div>
-  <div class="card">
-    <h2>China 🇨🇳</h2>
-    <span class="big">${launches.filter((d) => d.stateId === "CN").length.toLocaleString("en-US")}</span>
-  </div>
-  <div class="card">
-    <h2>Other</h2>
-    <span class="big">${launches.filter((d) => d.stateId !== "US" && d.stateId !== "SU" && d.stateId !== "RU" && d.stateId !== "CN").length.toLocaleString("en-US")}</span>
+```html
+<div class="grid grid-cols-1">
+  <div class="card" id="countries">    
+    <!-- This content is be replaced dynamically -->    
   </div>
 </div>
-
-<!-- Plot of launch history -->
-
-```js
-function launchTimeline(data, {width} = {}) {
-  return Plot.plot({
-    title: "Launches over the years",
-    width,
-    height: 300,
-    y: {grid: true, label: "Launches"},
-    color: {...color, legend: true},
-    marks: [
-      Plot.rectY(data, Plot.binX({y: "count"}, {x: "date", fill: "state", interval: "year", tip: true})),
-      Plot.ruleY([0])
-    ]
-  });
-}
 ```
 
-<div class="grid grid-cols-1">
-  <div class="card">
-    ${resize((width) => launchTimeline(launches, {width}))}
-  </div>
-</div>
 
-<!-- Plot of launch vehicles -->
-
-```js
-function vehicleChart(data, {width}) {
-  return Plot.plot({
-    title: "Popular launch vehicles",
-    width,
-    height: 300,
-    marginTop: 0,
-    marginLeft: 50,
-    x: {grid: true, label: "Launches"},
-    y: {label: null},
-    color: {...color, legend: true},
-    marks: [
-      Plot.rectX(data, Plot.groupY({x: "count"}, {y: "family", fill: "state", tip: true, sort: {y: "-x"}})),
-      Plot.ruleX([0])
-    ]
-  });
-}
-```
-
-<div class="grid grid-cols-1">
-  <div class="card">
-    ${resize((width) => vehicleChart(launches, {width}))}
-  </div>
-</div>
-
-Data: Jonathan C. McDowell, [General Catalog of Artificial Space Objects](https://planet4589.org/space/gcat)
