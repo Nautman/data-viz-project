@@ -25,6 +25,27 @@ const launches = FileAttachment("data/launches.csv").csv({typed: true});
 const pcaQ1 = FileAttachment("data/PCAVOL_A_QC1.csv").csv({typed: true});
 const pcaQ2 = FileAttachment("data/PCAVOL_A_QC2.csv").csv({typed: true});
 const pcaQ3 = FileAttachment("data/PCAVOL_A_QC3_1.csv").csv({typed: true});
+const GDP = FileAttachment("data/GDPs.csv").csv({typed: true});
+const prices = FileAttachment("data/EnergyPrices.csv").csv({typed: true});
+
+
+
+
+let summarizedPrices = []
+
+await prices.then((data) => {
+  // Summarize prices data by year
+  const yearlyPrices = d3.group(data, (d) => d.TIME_PERIOD.split('-')[0]); // Group by year
+  summarizedPrices = Array.from(yearlyPrices, ([year, values]) => ({
+    time: +year,
+    value: d3.mean(values, (d) => +d.OBS_VALUE) // Average of OBS_VALUE for S1 and S2
+  }));
+
+  console.log("Summarized Prices:", summarizedPrices);
+});
+
+
+
 ```
 
 <!-- A shared color scale for consistency, sorted by the number of launches -->
@@ -53,6 +74,20 @@ const data = [
     state: "DK"
   }
 ]
+
+
+
+
+const euGDP = GDP.filter((d) => d.geo === "Euro area – 20 countries (from 2023)")
+  .filter(d => +d.TIME_PERIOD >= 2019)
+  .map((d) => ({
+    country: d.geo,
+    time: +d.TIME_PERIOD, 
+    value: +d.OBS_VALUE,  
+  }));
+
+
+//console.log(euGDP);
 
 const countries = Mutable(['SE']);
 const addOrRemoveCountry = (country) => {
@@ -109,6 +144,37 @@ function plot2D(data, {width}) {
     ]
   });
 }
+
+function plotPrices(data, {width}) {
+  return Plot.plot({
+    title: "EU Energy Prices Over Time",
+    width,
+    height: 300,
+    x: {label: "Year", grid: true, tickFormat: d3.format("d")}, 
+    y: {label: "Price (unit)", grid: true},
+    marks: [
+      Plot.line(data, {x: "time", y: "value", stroke: "blue", strokeWidth: 2}),
+      Plot.dot(data, {x: "time", y: "value", fill: "blue", r: 4})
+    ]
+  });
+}
+
+function plotGDP(data, {width}) {
+  //console.log("Data passed to plot:", data);
+  return Plot.plot({
+    title: "EU GDP Over Time",
+    width,
+    height: 300,
+    x: {label: "Year", grid: true, tickFormat: d3.format("d")},
+    y: {label: "GDP (unit)", grid: true},
+    marks: [
+      Plot.line(data, {x: "time", y: "value", stroke: "country", strokeWidth: 2}),
+      Plot.dot(data, {x: "time", y: "value", fill: "country", r: 4})
+    ]
+  });
+}
+
+
 ```
 
 ```js
@@ -152,6 +218,14 @@ const question = view(Inputs.checkbox(["Q1", "Q2", "Q3"], {label: "question"}));
       return pcaChart(selectedPcaData[0], { width });
       }
     })}
+  </div>
+</div>
+<div class="grid grid-cols-2">
+  <div class="card">
+    ${resize((width) => plotPrices(summarizedPrices, {width}))}
+  </div>
+  <div class="card">
+    ${resize((width) => plotGDP(euGDP, {width}))}
   </div>
 </div>
 
