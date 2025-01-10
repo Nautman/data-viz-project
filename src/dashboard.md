@@ -22,6 +22,7 @@ const launches = FileAttachment("data/launches.csv").csv({typed: true});
 const pcaQ1 = FileAttachment("data/PCAVOL_A_QC1.csv").csv({typed: true});
 const pcaQ2 = FileAttachment("data/PCAVOL_A_QC2.csv").csv({typed: true});
 const pcaQ3 = FileAttachment("data/PCAVOL_A_QC3_1.csv").csv({typed: true});
+const data = await FileAttachment("data/data_VOL_A.json").json()
 
 const all_questions = FileAttachment("data/questions.csv").csv({typed: true});
 ```
@@ -133,6 +134,28 @@ function plot2D(data, {width}) {
 ```js
 countries
 ```
+
+```js
+const questionTitlesMap = new Map(Object.entries(data).map(([k, v]) => [k, {...v, id: k}]));
+```
+
+```js
+
+const selectedQuestion = view(
+  Inputs.radio(
+    questionTitlesMap,
+    {
+      format: ([k, v]) => v.title,
+      value: questionTitlesMap.get("QC1"),
+    }
+  )
+);
+```
+
+```js
+selectedQuestion
+```
+
 
 ```js
 plot2D(pcaQ1, {width: 600})
@@ -252,7 +275,6 @@ plot2D(pcaQ1, {width: 600})
 
 ```js
 // Load data_VOL_A.json
-const data = await FileAttachment("data/data_VOL_A.json").json()
 
 // Go through each question and for every table make sure that there are no "-" in the data, if there are, replace it with 0
 Object.keys(data).forEach((question) => {
@@ -268,9 +290,9 @@ Object.keys(data).forEach((question) => {
 });
 
 
-const selectedQuestion = "QC3_1";
+const selectedQuestionID = selectedQuestion.id;
 
-const selectedData = data[selectedQuestion];
+const selectedData = data[selectedQuestionID];
 
 
 
@@ -311,8 +333,8 @@ const chart = Plot.plot({
       histogramData.filter(
         // Check if begins with "Total '"
         (d) => d.statement.startsWith("Total '") === false
-      )
-      , {
+      ),
+      {
       x: "country",
       y: "value",
       fill: "statement",
