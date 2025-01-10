@@ -86,9 +86,10 @@ const addClick = (index, scales, values, dimensions, context, next) => {
   const circles = el.querySelectorAll("circle");
   for (let i = 0; i < circles.length; i++) {
     const d = {index: index[i], x: values.channels.x.value[i], y: values.channels.y.value[i]};
-    circles[i].addEventListener("click", () => {
-      const code = pcaQ1[d.index].Countries;
-      addOrRemoveCountry(code);
+    circles[i].addEventListener("click", (e) => {
+      // This is a rather hacky way to get the country code
+      const countryCode = values.channels.fill.value[i];
+      addOrRemoveCountry(countryCode);
       // alert(`Added ${JSON.stringify(d)} (${d.x}, ${d.y})`);
       // el.classList.add("selected");
     });
@@ -136,7 +137,7 @@ countries
 ```
 
 ```js
-const questionTitlesMap = new Map(Object.entries(data).map(([k, v]) => [k, {...v, id: k}]));
+const questionTitlesMap = new Map(Object.entries(data).map(([k, v]) => [k, {...v, id: k}]).slice(0,8));
 ```
 
 ```js
@@ -153,12 +154,9 @@ const selectedQuestion = view(
 ```
 
 ```js
-selectedQuestion
-```
-
-
-```js
-plot2D(pcaQ1, {width: 600})
+plot2D(
+  pca_data[selectedQuestion.id]
+  , {width: 600})
 ```
 
 ```html
@@ -309,9 +307,9 @@ const statements = Object.values(selectedData.table["Statement"])
 
 // Create a stacked histogram with each country as a bar (a row) and each statement as a segment (a stack)
 
-const histogramData = allCountries.map((country, i) => {
+const histogramData = pca_data[selectedQuestionID].sort((a, b) => b.PC1 - a.PC1).filter(d => d.Countries !== "UE27\nEU27").map((d, i) => {
+  const country = d.Countries;
   return Object.entries(selectedData.table[country]).map(([statement, value]) => {
-
     return {country, statement: statements[parseInt(statement)], value};
   });
 }).flat();
