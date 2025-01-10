@@ -153,10 +153,13 @@ const selectedQuestion = view(
 );
 ```
 
-```js
-plot2D(
-  pca_data[selectedQuestion.id]
-  , {width: 600})
+
+```html
+<div class="grid grid-cols-1">
+  <div class="card" id="histogram">
+    ${resize((width) => plot2D(pca_data[selectedQuestion.id], {width}))}
+  </div>
+</div>
 ```
 
 ```html
@@ -320,9 +323,10 @@ const histogramData = pca_data[selectedQuestionID].sort((a, b) => b.PC1 - a.PC1)
 // console.log("statements", statements)
 
 
-const chart = Plot.plot({
-  width: 928,
-  height: 500,
+const plotHistogram = (
+  data, {width}
+) => Plot.plot({
+  width,
   x: {label: null},
   y: {tickFormat: "s", tickSpacing: 50},
   color: {
@@ -349,23 +353,10 @@ const chart = Plot.plot({
 })
 ```
 
-```js
-chart
-```
-
 ```html
 <div class="grid grid-cols-1">
-  <div class="card" id="histogram">    
-    <!-- This content is be replaced dynamically -->    
+  <div class="card" id="histogram">
+    ${resize((width) => plotHistogram(histogramData, {width}))}
   </div>
 </div>
 ```
-
-```js
-// document.getElementById("histogram").appendChild(chart);
-```
-
-
-
-
-
