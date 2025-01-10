@@ -16,6 +16,7 @@ toc: false
 
 <!-- Load and transform the data -->
 
+
 ```js
 const launches = FileAttachment("data/launches.csv").csv({typed: true});
 const pcaQ1 = FileAttachment("data/PCAVOL_A_QC1.csv").csv({typed: true});
@@ -43,9 +44,9 @@ const questions_to_display_dict = all_questions
     };
   });
 
-console.log(all_questions);
-console.log(questions_to_display_dict);
-console.log(pca_data)
+// console.log(all_questions);
+// console.log(questions_to_display_dict);
+// console.log(pca_data)
 
 let user_selected_questions = [];
 
@@ -62,11 +63,79 @@ const handleCheckboxChange = (event) => {
 const updatePcaChart = () => {
   const selectedPcaData = user_selected_questions.map((id) => pca_data[id]);
   const chartData = selectedPcaData.length > 0 ? selectedPcaData[0] : pcaQ1;
-  console.log(chartData[0]["Countries"])
+  // console.log(chartData[0]["Countries"])
   document.getElementById("pca-chart").innerHTML = "";
   document.getElementById("pca-chart").appendChild(pcaChart(chartData, { width: 600 }));
   
 };
+```
+
+```js
+const countries = Mutable(['SE']);
+const addOrRemoveCountry = (country) => {
+  if (countries.value.includes(country)) {
+    countries.value = countries.value.filter((c) => c !== country);
+  } else {
+    countries.value = [...countries.value, country];
+  }
+}
+
+const addClick = (index, scales, values, dimensions, context, next) => {
+  const el = next(index, scales, values, dimensions, context);
+  const circles = el.querySelectorAll("circle");
+  for (let i = 0; i < circles.length; i++) {
+    const d = {index: index[i], x: values.channels.x.value[i], y: values.channels.y.value[i]};
+    circles[i].addEventListener("click", () => {
+      const code = pcaQ1[d.index].Countries;
+      addOrRemoveCountry(code);
+      // alert(`Added ${JSON.stringify(d)} (${d.x}, ${d.y})`);
+      // el.classList.add("selected");
+    });
+  }
+  return el;
+}
+```
+
+```js
+
+function plot2D(data, {width}) {
+  return Plot.plot({
+    width,
+    height: 300,
+    // start at 0,0 go to 3,3
+    x: {label: "PCA 1"},
+    y: {label: "PCA 2"},
+    // color: {legend: false},
+    marks: [
+      Plot.ruleY([0]),
+      Plot.dot(data, {
+        x: "PC1", y: "PC2", r: 10, className: `countrydot`, render: addClick,
+        fill: "Countries",
+        fillOpacity: (d) => {
+          return countries.includes(d.Countries) ? 1 : 0.5;
+        } 
+      }),
+      // Add text labels for country names
+      Plot.text(data, {x: "PC1", y: "PC2", text: "Countries", dx: 5, dy: -5, pointerEvents: "none"}),
+        // Add horizontal and vertical lines through the origin
+      Plot.ruleX([0], {stroke: "grey", strokeWidth: 2}),
+      Plot.ruleY([0], {stroke: "grey", strokeWidth: 2}),
+      // Plot.dot(data, {x: "x", y: "y", fill: "state", size: 200, title: "state", render: addClick,
+      //  r: 10, 
+      // className: `countrydot`
+      // }),
+      // Plot.text(data, {x: "x", y: "y", text: "state", dy: "-0.5em", dx: "-0.5em", color: "white", font: "bold 10px sans-serif", pointerEvents: "none"}),
+    ]
+  });
+}
+```
+
+```js
+countries
+```
+
+```js
+plot2D(pcaQ1, {width: 600})
 ```
 
 ```html
@@ -113,7 +182,7 @@ const updatePcaChart = () => {
       marks: [
         // Add dots with a fixed color
         Plot.dot(data, {x: "PC1", y: "PC2", fill: (d) => {
-          console.log("d", d.Countries, user_selected_countries)
+          // console.log("d", d.Countries, user_selected_countries)
             return user_selected_countries.includes(d.Countries) ? "lightblue" : "red";
           }, r: 10, className: `countrydot`
         }),
@@ -209,7 +278,7 @@ const selectedData = data[selectedQuestion];
 // The table exists of all countries (for example with a key "SE"), and then "Statement" which corresponds to the values inside each country. "Statement"[0] corresponds to country[0].
 
 // Get countries and filter out the "Statement" key
-const countries = Object.keys(selectedData.table).filter((d) => d !== "Statement");
+const allCountries = Object.keys(selectedData.table).filter((d) => d !== "Statement");
 
 // Get the statements
 const statements = Object.values(selectedData.table["Statement"])
@@ -218,15 +287,15 @@ const statements = Object.values(selectedData.table["Statement"])
 
 // Create a stacked histogram with each country as a bar (a row) and each statement as a segment (a stack)
 
-const histogramData = countries.map((country, i) => {
+const histogramData = allCountries.map((country, i) => {
   return Object.entries(selectedData.table[country]).map(([statement, value]) => {
 
     return {country, statement: statements[parseInt(statement)], value};
   });
 }).flat();
 
-console.log("histogramData", histogramData)
-console.log("statements", statements)
+// console.log("histogramData", histogramData)
+// console.log("statements", statements)
 
 
 const chart = Plot.plot({
@@ -248,18 +317,17 @@ const chart = Plot.plot({
       y: "value",
       fill: "statement",
       fillOpacity: (d) => {
-        console.log("Datapoint", d)
-        return 0.5
+        return countries.includes(d.country) ? 1 : 0.5;
       },
       title: "Test"
       // sort: {color: null, x: "-y"}
     })
   ]
 })
-document.getElementById("histogram").appendChild(chart);
+```
 
-
-
+```js
+chart
 ```
 
 ```html
