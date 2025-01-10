@@ -112,9 +112,13 @@ const updatePcaChart = () => {
       color: {legend: false},
       marks: [
         // Add dots with a fixed color
-        Plot.dot(data, {x: "PC1", y: "PC2", fill: "blue", r: 10}),
+        Plot.dot(data, {x: "PC1", y: "PC2", fill: (d) => {
+          console.log("d", d.Countries, user_selected_countries)
+            return user_selected_countries.includes(d.Countries) ? "lightblue" : "red";
+          }, r: 10, className: `countrydot`
+        }),
         // Add text labels for country names
-        Plot.text(data, {x: "PC1", y: "PC2", text: "Countries", dx: 5, dy: -5}),
+        Plot.text(data, {x: "PC1", y: "PC2", text: "Countries", dx: 5, dy: -5, pointerEvents: "none"}),
         // Add horizontal and vertical lines through the origin
         Plot.ruleX([0], {stroke: "grey", strokeWidth: 2}),
         Plot.ruleY([0], {stroke: "grey", strokeWidth: 2}),
@@ -176,5 +180,101 @@ const updatePcaChart = () => {
   </div>
 </div>
 ```
+
+```js
+// Load data_VOL_A.json
+const data = await FileAttachment("data/data_VOL_A.json").json()
+
+// Go through each question and for every table make sure that there are no "-" in the data, if there are, replace it with 0
+Object.keys(data).forEach((question) => {
+  const table = data[question].table;
+  // Filter out the "Statement" key
+  Object.keys(table).filter((d) => d !== "Statement").forEach((country) => {
+    const values = table[country];
+    table[country] = Object.entries(values).reduce((acc, [key, value]) => {
+      acc[key] = value === "-" ? 0 : value;
+      return acc;
+    }, {});
+  });
+});
+
+
+const selectedQuestion = "QC3_1";
+
+const selectedData = data[selectedQuestion];
+
+
+
+// The data is found in the "table" key.
+// The table exists of all countries (for example with a key "SE"), and then "Statement" which corresponds to the values inside each country. "Statement"[0] corresponds to country[0].
+
+// Get countries and filter out the "Statement" key
+const countries = Object.keys(selectedData.table).filter((d) => d !== "Statement");
+
+// Get the statements
+const statements = Object.values(selectedData.table["Statement"])
+
+
+
+// Create a stacked histogram with each country as a bar (a row) and each statement as a segment (a stack)
+
+const histogramData = countries.map((country, i) => {
+  return Object.entries(selectedData.table[country]).map(([statement, value]) => {
+
+    return {country, statement: statements[parseInt(statement)], value};
+  });
+}).flat();
+
+console.log("histogramData", histogramData)
+console.log("statements", statements)
+
+
+const chart = Plot.plot({
+  width: 928,
+  height: 500,
+  x: {label: null},
+  y: {tickFormat: "s", tickSpacing: 50},
+  color: {
+    legend: true
+  },
+  marks: [
+    Plot.barY(
+      histogramData.filter(
+        // Check if begins with "Total '"
+        (d) => d.statement.startsWith("Total '") === false
+      )
+      , {
+      x: "country",
+      y: "value",
+      fill: "statement",
+      fillOpacity: (d) => {
+        console.log("Datapoint", d)
+        return 0.5
+      },
+      title: "Test"
+      // sort: {color: null, x: "-y"}
+    })
+  ]
+})
+document.getElementById("histogram").appendChild(chart);
+
+
+
+```
+
+```html
+<div class="grid grid-cols-1">
+  <div class="card" id="histogram">    
+    <!-- This content is be replaced dynamically -->    
+  </div>
+</div>
+```
+
+```js
+// document.getElementById("histogram").appendChild(chart);
+```
+
+
+
 
 
