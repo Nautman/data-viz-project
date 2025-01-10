@@ -307,10 +307,12 @@ const statements = Object.values(selectedData.table["Statement"])
 
 // Create a stacked histogram with each country as a bar (a row) and each statement as a segment (a stack)
 
+// console.log(pca_data[selectedQuestionID].sort((a, b) => b.PC1 - a.PC1))
+
 const histogramData = pca_data[selectedQuestionID].sort((a, b) => b.PC1 - a.PC1).filter(d => d.Countries !== "UE27\nEU27").map((d, i) => {
   const country = d.Countries;
   return Object.entries(selectedData.table[country]).map(([statement, value]) => {
-    return {country, statement: statements[parseInt(statement)], value};
+    return {country, statement: statements[parseInt(statement)], value, PC1: d.PC1, PC2: d.PC2};
   });
 }).flat();
 
@@ -339,7 +341,8 @@ const chart = Plot.plot({
       fillOpacity: (d) => {
         return countries.includes(d.country) ? 1 : 0.5;
       },
-      title: "Test"
+      channels: {PC1: {value: 'PC1'}},
+      sort: {x: "PC1"}
       // sort: {color: null, x: "-y"}
     })
   ]
