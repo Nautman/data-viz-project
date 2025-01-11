@@ -23,15 +23,11 @@ const pcaQ1 = FileAttachment("data/PCAVOL_A_QC1.csv").csv({typed: true});
 const pcaQ2 = FileAttachment("data/PCAVOL_A_QC2.csv").csv({typed: true});
 const pcaQ3 = FileAttachment("data/PCAVOL_A_QC3_1.csv").csv({typed: true});
 const data = await FileAttachment("data/data_VOL_A.json").json()
+const pca_data = await FileAttachment("data/pca_data.json").json()
 
 const all_questions = FileAttachment("data/questions.csv").csv({typed: true});
 ```
 ```js
-const pca_data = {
-  QC1: pcaQ1,
-  QC2: pcaQ2,
-  QC3: pcaQ3
-};
 
 const questions_to_display = ["QC1", "QC2", "QC3"];
 
@@ -44,10 +40,6 @@ const questions_to_display_dict = all_questions
       text: q.Question_Text || "Unknown Text"
     };
   });
-
-// console.log(all_questions);
-// console.log(questions_to_display_dict);
-// console.log(pca_data)
 
 let user_selected_questions = [];
 
@@ -118,15 +110,10 @@ function plot2D(data, {width}) {
         } 
       }),
       // Add text labels for country names
-      Plot.text(data, {x: "PC1", y: "PC2", text: "Countries", dx: 5, dy: -5, pointerEvents: "none"}),
+      Plot.text(data, {x: "PC1", y: "PC2", text: "Countries", dx: 0, dy: 0, pointerEvents: "none"}),
         // Add horizontal and vertical lines through the origin
       Plot.ruleX([0], {stroke: "grey", strokeWidth: 2}),
       Plot.ruleY([0], {stroke: "grey", strokeWidth: 2}),
-      // Plot.dot(data, {x: "x", y: "y", fill: "state", size: 200, title: "state", render: addClick,
-      //  r: 10, 
-      // className: `countrydot`
-      // }),
-      // Plot.text(data, {x: "x", y: "y", text: "state", dy: "-0.5em", dx: "-0.5em", color: "white", font: "bold 10px sans-serif", pointerEvents: "none"}),
     ]
   });
 }
@@ -137,7 +124,7 @@ countries
 ```
 
 ```js
-const questionTitlesMap = new Map(Object.entries(data).map(([k, v]) => [k, {...v, id: k}]).slice(0,8));
+const questionTitlesMap = new Map(Object.entries(data).map(([k, v]) => [k, {...v, id: k}]));
 ```
 
 ```js
@@ -319,38 +306,104 @@ const histogramData = pca_data[selectedQuestionID].sort((a, b) => b.PC1 - a.PC1)
   });
 }).flat();
 
-// console.log("histogramData", histogramData)
-// console.log("statements", statements)
+// Some questions have statements that can be used with a blue / orange color scheme
+// For QC2, QC10, and QC11, they start with "Yes, " or "No, " and can be used with a blue / orange color scheme. "Yes, " is blue, "No, " is orange.
+// The mapping of which shade of blue and orange can be devised by the order of the statements in the data.
 
+
+const yesNoBlueOrangeColorScaleByQuestion = (questionID) => {
+  const statements = Object.values(data[questionID].table["Statement"]);
+  const yesStatements = statements.filter((statement) => statement.startsWith("Yes, ")).reverse();
+  const noStatements = statements.filter((statement) => statement.startsWith("No, ")).reverse();
+
+  // Adjust scales
+  const blueRange = (t) => d3.interpolateBlues(0.3 + t * 0.7);
+  const orangeRange = (t) => d3.interpolateOranges(0.3 + t * 0.7);
+
+  const blueScale = d3.scaleSequential(blueRange).domain([0, yesStatements.length]);
+  const orangeScale = d3.scaleSequential(orangeRange).domain([0, noStatements.length]);
+
+  const result = statements.map((statement) => {
+    if (statement.startsWith("Yes, ")) {
+      return blueScale(yesStatements.indexOf(statement));
+    } else if (statement.startsWith("No, ")) {
+      return orangeScale(noStatements.indexOf(statement));
+    } else if (statement === "Don't know") {
+      return "lightgrey";
+    } else {
+      return "grey";
+    }
+  });
+
+  return result;
+};
+
+const agreenessBlueOrangeColorScale = [
+  d3.interpolateBlues(0.6),
+  d3.interpolateBlues(0.3),
+  d3.interpolateOranges(0.3),
+  d3.interpolateOranges(0.6),
+  "lightgrey",
+  "grey"
+];
+
+const aLotALittleColorScale = [
+  d3.interpolateBlues(0.8),
+  d3.interpolateBlues(0.6),
+  d3.interpolateBlues(0.4),
+  d3.interpolateBlues(0.2),
+  "lightgrey",
+  "grey"
+];
+
+
+const rangeBySpecialQuestions = {
+  QC2: yesNoBlueOrangeColorScaleByQuestion("QC2"),
+  QC10: yesNoBlueOrangeColorScaleByQuestion("QC10"),
+  QC11: yesNoBlueOrangeColorScaleByQuestion("QC11"),
+  'QC3_1': agreenessBlueOrangeColorScale,
+  'QC3_2': agreenessBlueOrangeColorScale,
+  'QC3_3': agreenessBlueOrangeColorScale,
+  'QC3_4': agreenessBlueOrangeColorScale,
+  'QC3_5': agreenessBlueOrangeColorScale,
+  'QC8_1': aLotALittleColorScale,
+  'QC8_2': aLotALittleColorScale,
+  'QC8_3': aLotALittleColorScale,
+}
 
 const plotHistogram = (
   data, {width}
-) => Plot.plot({
-  width,
-  x: {label: null},
-  y: {tickFormat: "s", tickSpacing: 50},
-  color: {
-    legend: true
-  },
-  marks: [
-    Plot.barY(
-      histogramData.filter(
-        // Check if begins with "Total '"
-        (d) => d.statement.startsWith("Total '") === false
-      ),
-      {
-      x: "country",
-      y: "value",
-      fill: "statement",
-      fillOpacity: (d) => {
-        return countries.includes(d.country) ? 1 : 0.5;
-      },
-      channels: {PC1: {value: 'PC1'}},
-      sort: {x: "PC1"}
-      // sort: {color: null, x: "-y"}
-    })
-  ]
-})
+) => {
+  return Plot.plot({
+    width,
+    x: {label: "Country"},
+    y: {tickFormat: "s", tickSpacing: 50, label: "Fraction of respondents"},
+    color: {
+      type: rangeBySpecialQuestions[selectedQuestionID] ? "ordinal" : "categorical",
+      domain: statements,
+      range: rangeBySpecialQuestions[selectedQuestionID],
+      legend: true
+    },
+    marks: [
+      Plot.barY(
+        histogramData.filter(
+          // Check if begins with "Total '"
+          (d) => d.statement.startsWith("Total '") === false
+        ),
+        {
+        x: "country",
+        y: "value",
+        fill: "statement",
+        fillOpacity: (d) => {
+          return countries.includes(d.country) ? 1 : 0.5;
+        },
+        channels: {PC1: {value: 'PC1'}},
+        sort: {x: "PC1"}
+        // sort: {color: null, x: "-y"}
+      })
+    ]
+  })
+}
 ```
 
 ```html
