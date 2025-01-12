@@ -24,7 +24,7 @@ const EU27CodesToCountry = new Map(Object.entries({
   "BE": "Belgium",
   "BG": "Bulgaria",
   "CY": "Cyprus",
-  "CZ": "Czech Republic",
+  "CZ": "Czechia",
   "DE": "Germany",
   "DK": "Denmark",
   "EE": "Estonia",
@@ -59,9 +59,10 @@ const countryNamesToEU27Codes = new Map(Array.from(EU27CodesToCountry.entries())
 ```js
 const data = await FileAttachment("data/data_VOL_A.json").json()
 const pca_data = await FileAttachment("data/pca_data.json").json()
-const GDP = await FileAttachment("data/GDPs.csv").csv({typed: true});
+const GDPWithMoreCountries = await FileAttachment("data/GDPs.csv").csv({typed: true});
 const pricesWithMoreCountries = await FileAttachment("data/EnergyPrices.csv").csv({typed: true});
 const prices = pricesWithMoreCountries.filter((d) => countryNamesToEU27Codes.has(d.geo));
+const GDP = GDPWithMoreCountries.filter((d) => countryNamesToEU27Codes.has(d.geo));
 
 let summarizedPrices = []
 
@@ -89,6 +90,21 @@ const energyPricesPerCountryPerYear = Array.from(energyPricesPerCountry, ([count
 });
 
 const energyPricesPerCountryCode = new Map(energyPricesPerCountryPerYear);
+
+const GDPPerCountry = d3.group(GDP, (d) => d.geo);
+const GDPPerCountryPerYear = Array.from(GDPPerCountry, ([country, values]) => {
+  const GDPs = values.map((d) => {
+    return {
+      // TIME_PERIOD is in the format "YEAR"
+      time: new Date(`${d.TIME_PERIOD}-01-01`),
+      value: +d.OBS_VALUE
+    }
+  });
+  const code = countryNamesToEU27Codes.get(country);
+  return [code, GDPs.map((d) => ({...d, code}))];
+});
+
+const GDPPerCountryCode = new Map(GDPPerCountryPerYear);
 
 ```
 
@@ -358,6 +374,39 @@ function plotPrices(data, {width}) {
 <div class="grid grid-cols-1">
   <div class="card" id="prices">
     ${resize((width) => plotPrices(selectedCountriesPriceData, {width}))}
+  </div>
+</div>
+```
+
+
+```js
+
+const selectedCountriesGDPData = countries.map((code => GDPPerCountryCode.get(code) ?? [])).flat();
+
+
+function plotGDP(data, {width}) {
+  return Plot.plot({
+    title: "GDP Over Time",
+    width,
+    height: 300,
+    color: {
+      legend: true,
+      domain: countries,
+    },
+    y: {label: "GDP (unit)", grid: true},
+    marks: [
+      Plot.line(data, {x: "time", y: "value", strokeWidth: 2, stroke: "code"}),
+      Plot.dot(data, {x: "time", y: "value", fill: "code", r: 4})
+    ]
+  });
+}
+
+```
+
+```html
+<div class="grid grid-cols-1">
+  <div class="card" id="gdp">
+    ${resize((width) => plotGDP(selectedCountriesGDPData, {width}))}
   </div>
 </div>
 ```
