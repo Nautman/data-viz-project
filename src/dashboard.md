@@ -18,49 +18,78 @@ toc: false
 
 
 ```js
-const launches = FileAttachment("data/launches.csv").csv({typed: true});
-const pcaQ1 = FileAttachment("data/PCAVOL_A_QC1.csv").csv({typed: true});
-const pcaQ2 = FileAttachment("data/PCAVOL_A_QC2.csv").csv({typed: true});
-const pcaQ3 = FileAttachment("data/PCAVOL_A_QC3_1.csv").csv({typed: true});
+
+const EU27CodesToCountry = new Map(Object.entries({
+  "AT": "Austria",
+  "BE": "Belgium",
+  "BG": "Bulgaria",
+  "CY": "Cyprus",
+  "CZ": "Czech Republic",
+  "DE": "Germany",
+  "DK": "Denmark",
+  "EE": "Estonia",
+  "EL": "Greece",
+  "ES": "Spain",
+  "FI": "Finland",
+  "FR": "France",
+  "HR": "Croatia",
+  "HU": "Hungary",
+  "IE": "Ireland",
+  "IT": "Italy",
+  "LT": "Lithuania",
+  "LU": "Luxembourg",
+  "LV": "Latvia",
+  "MT": "Malta",
+  "NL": "Netherlands",
+  "PL": "Poland",
+  "PT": "Portugal",
+  "RO": "Romania",
+  "SE": "Sweden",
+  "SI": "Slovenia",
+  "SK": "Slovakia",
+  "UK": "United Kingdom",
+  "EU27": "EU27"
+}));
+
+const countryNamesToEU27Codes = new Map(Array.from(EU27CodesToCountry.entries()).map(([k, v]) => [v, k]));
+
+
+```
+
+```js
 const data = await FileAttachment("data/data_VOL_A.json").json()
 const pca_data = await FileAttachment("data/pca_data.json").json()
+const GDP = await FileAttachment("data/GDPs.csv").csv({typed: true});
+const pricesWithMoreCountries = await FileAttachment("data/EnergyPrices.csv").csv({typed: true});
+const prices = pricesWithMoreCountries.filter((d) => countryNamesToEU27Codes.has(d.geo));
 
-const all_questions = FileAttachment("data/questions.csv").csv({typed: true});
-```
-```js
+let summarizedPrices = []
 
-const questions_to_display = ["QC1", "QC2", "QC3"];
+// Summarize prices data by year
+const yearlyPrices = d3.group(prices, (d) => d.TIME_PERIOD.split('-')[0]); // Group by year
+summarizedPrices = Array.from(yearlyPrices, ([year, values]) => ({
+  time: +year,
+  value: d3.mean(values, (d) => +d.OBS_VALUE) // Average of OBS_VALUE for S1 and S2
+}));
 
-const questions_to_display_dict = all_questions
-  .filter((q) => questions_to_display.includes(q.ID))
-  .map((q) => {
+// Get energy price per half-year for each country code
+const energyPricesPerCountry = d3.group(prices, (d) => d.geo);
+// Convert "TIME_PERIOD" that is "YEAR-S1" or "YEAR-S2" to "YEAR-01" or "YEAR-07"
+const energyPricesPerCountryPerYear = Array.from(energyPricesPerCountry, ([country, values]) => {
+  const prices = values.map((d) => {
+    const year = d.TIME_PERIOD.split('-')[0];
+    const month = d.TIME_PERIOD.split('-')[1] === "S1" ? "01" : "07";
     return {
-      question_id: q.ID || "Unknown ID",
-      sub_id: q.SubID || "",
-      text: q.Question_Text || "Unknown Text"
-    };
+      time: new Date(`${year}-${month}`),
+      value: +d.OBS_VALUE
+    }
   });
+  const code = countryNamesToEU27Codes.get(country);
+  return [code, prices.map((d) => ({...d, code}))];
+});
 
-let user_selected_questions = [];
+const energyPricesPerCountryCode = new Map(energyPricesPerCountryPerYear);
 
-const handleCheckboxChange = (event) => {
-  const questionId = event.target.value;
-  if (event.target.checked) {
-    user_selected_questions.push(questionId);
-  } else {
-    user_selected_questions = user_selected_questions.filter((id) => id !== questionId);
-  }
-  updatePcaChart();
-};
-
-const updatePcaChart = () => {
-  const selectedPcaData = user_selected_questions.map((id) => pca_data[id]);
-  const chartData = selectedPcaData.length > 0 ? selectedPcaData[0] : pcaQ1;
-  // console.log(chartData[0]["Countries"])
-  document.getElementById("pca-chart").innerHTML = "";
-  document.getElementById("pca-chart").appendChild(pcaChart(chartData, { width: 600 }));
-  
-};
 ```
 
 ```js
@@ -99,6 +128,7 @@ function plot2D(data, {width}) {
     // start at 0,0 go to 3,3
     x: {label: "PCA 1"},
     y: {label: "PCA 2"},
+    grid: true,
     // color: {legend: false},
     marks: [
       Plot.ruleY([0]),
@@ -120,17 +150,19 @@ function plot2D(data, {width}) {
 ```
 
 ```js
-countries
-```
+const questionTitlesMap = new Map(Object.entries(data)
+  // Filter out questions that end with T
+  .filter(([k, v]) => !k.endsWith("T"))
+  .map(([k, v]) => [k, {...v, id: k}])
+);
 
-```js
-const questionTitlesMap = new Map(Object.entries(data).map(([k, v]) => [k, {...v, id: k}]));
+
 ```
 
 ```js
 
 const selectedQuestion = view(
-  Inputs.radio(
+  Inputs.select(
     questionTitlesMap,
     {
       format: ([k, v]) => v.title,
@@ -145,118 +177,6 @@ const selectedQuestion = view(
 <div class="grid grid-cols-1">
   <div class="card" id="histogram">
     ${resize((width) => plot2D(pca_data[selectedQuestion.id], {width}))}
-  </div>
-</div>
-```
-
-```html
-<div class="grid grid-cols-2">
-  <div class="card">
-    ${questions_to_display_dict.map(
-      (d) => html`<div style="display: flex; align-items: center;">
-  <input
-    type="checkbox"
-    id="${d.question_id}"
-    name="question"
-    value="${d.question_id}"
-    onchange=${(event) => handleCheckboxChange(event)}
-  />
-  <label for="${d.question_id}" style="margin-right: 10px;">${d.question_id}.${d.sub_id}</label>
-  <p>${d.text}</p>
-</div>`
-    )}
-  </div>
-  <div class="card" id="pca-chart">
-    ${pcaChart(pcaQ1, { width: 600 })}
-  </div>
-</div>
-```
-
-```js
-  const user_selected_countries = []; // Store clicked dots here
-  const selectedCountriesContainer = document.getElementById("countries");
-    if (selectedCountriesContainer) {
-      selectedCountriesContainer.innerHTML = "<p>Selected Countries will show up here</p>";
-    } else {
-      console.error("Container with ID 'countries' not found");
-    }
-
-  function pcaChart(data, {width}) {
-    // Create the chart
-    const chart = Plot.plot({
-      title: "Choose a question to show the data, Q1 is shown by default.",
-      width,
-      grid: true,
-      x: {label: "PCA 1"},
-      y: {label: "PCA 2"},
-      color: {legend: false},
-      marks: [
-        // Add dots with a fixed color
-        Plot.dot(data, {x: "PC1", y: "PC2", fill: (d) => {
-          // console.log("d", d.Countries, user_selected_countries)
-            return user_selected_countries.includes(d.Countries) ? "lightblue" : "red";
-          }, r: 10, className: `countrydot`
-        }),
-        // Add text labels for country names
-        Plot.text(data, {x: "PC1", y: "PC2", text: "Countries", dx: 5, dy: -5, pointerEvents: "none"}),
-        // Add horizontal and vertical lines through the origin
-        Plot.ruleX([0], {stroke: "grey", strokeWidth: 2}),
-        Plot.ruleY([0], {stroke: "grey", strokeWidth: 2}),
-      ]
-    });
-
-    // Add interactivity
-    const svg = chart.querySelector("svg");
-    const dots = svg.querySelectorAll("circle"); // Select dots
-    
-    
-    dots.forEach((dot, index) => {
-      // Bind data to each dot
-      dot.dataset.index = index;
-      dot.dataset.pc1 = data[index].PC1;
-      dot.dataset.pc2 = data[index].PC2;
-      dot.dataset.country = data[index].Countries;
-
-      // Add click event listener
-      dot.addEventListener("click", (event) => {
-        const target = event.target;
-        const clickedData = {
-          index: target.dataset.index,
-          PC1: target.dataset.pc1,
-          PC2: target.dataset.pc2,
-          country: target.dataset.country,
-        };
-      // Check if the country is already selected
-      const existingIndex = user_selected_countries.findIndex(
-        (d) => d.country === clickedData.country
-      );
-
-      if (existingIndex === -1) {
-        // If not, add it to the array
-        user_selected_countries.push(clickedData);
-      } else {
-        // If yes, remove it from the array
-        user_selected_countries.splice(existingIndex, 1);
-      }
-
-            // Update the UI dynamically
-        selectedCountriesContainer.innerHTML = user_selected_countries
-        .map((d) => `<div><p>${d.country}</p></div>`)
-        .join("");
-        // Perform an action (e.g., console log or update UI)
-        console.log("Dot clicked:", clickedData);
-        console.log("Selected Dots:", user_selected_countries)
-      });
-    });
-
-    return chart;
-  }
-```
-
-```html
-<div class="grid grid-cols-1">
-  <div class="card" id="countries">    
-    <!-- This content is be replaced dynamically -->    
   </div>
 </div>
 ```
@@ -296,8 +216,6 @@ const statements = Object.values(selectedData.table["Statement"])
 
 
 // Create a stacked histogram with each country as a bar (a row) and each statement as a segment (a stack)
-
-// console.log(pca_data[selectedQuestionID].sort((a, b) => b.PC1 - a.PC1))
 
 const histogramData = pca_data[selectedQuestionID].sort((a, b) => b.PC1 - a.PC1).filter(d => d.Countries !== "UE27\nEU27").map((d, i) => {
   const country = d.Countries;
@@ -410,6 +328,36 @@ const plotHistogram = (
 <div class="grid grid-cols-1">
   <div class="card" id="histogram">
     ${resize((width) => plotHistogram(histogramData, {width}))}
+  </div>
+</div>
+```
+
+```js
+
+const selectedCountriesPriceData = countries.map((code => energyPricesPerCountryCode.get(code) ?? [])).flat();
+
+function plotPrices(data, {width}) {
+  return Plot.plot({
+    title: "EU Energy Prices Over Time",
+    width,
+    height: 300,
+    color: {
+      legend: true,
+      domain: countries,
+    },
+    y: {label: "Price (unit)", grid: true},
+    marks: [
+      Plot.line(data, {x: "time", y: "value", strokeWidth: 2, stroke: "code"}),
+      Plot.dot(data, {x: "time", y: "value", fill: "code", r: 4})
+    ]
+  });
+}
+```
+
+```html
+<div class="grid grid-cols-1">
+  <div class="card" id="prices">
+    ${resize((width) => plotPrices(selectedCountriesPriceData, {width}))}
   </div>
 </div>
 ```
