@@ -558,47 +558,11 @@ const sharedColorScale = Plot.scale({
   }
 });
 
-// Year buttons
-function yearButtons() {
-  const uniqueYears = [...new Set(energyConsumptionData.map(d => d.TIME_PERIOD))].sort();
-  const container = document.createElement("div");
-  container.style.marginBottom = "20px";
-  container.style.display = "flex";
-  container.style.gap = "10px";
-
-  uniqueYears.forEach(year => {
-    const button = document.createElement("button");
-    button.textContent = year;
-    button.style.padding = "10px 15px";
-    button.style.cursor = "pointer";
-    button.style.border = "1px solid #007BFF";
-    button.style.backgroundColor = year === selectedYear ? "#007BFF" : "#fff";
-    button.style.color = year === selectedYear ? "#fff" : "#007BFF";
-    button.style.borderRadius = "5px";
-    button.onclick = () => {
-      selectedYear = year;
-      renderCharts(); // Re-render both charts when a year is selected
-      updateButtonStyles(container); // Update button styles
-    };
-    container.appendChild(button);
-  });
-
-  return container;
-}
-
-// Button styles
-function updateButtonStyles(container) {
-  container.childNodes.forEach(button => {
-    button.style.backgroundColor = button.textContent == selectedYear ? "#007BFF" : "#fff";
-    button.style.color = button.textContent == selectedYear ? "#fff" : "#007BFF";
-  });
-}
-
 // Filter, normalize, and render a chart
 function renderChart(data, title) {
   // Filter data for the selected year
   const dataForYear = data.filter(
-    d => d.TIME_PERIOD === selectedYear && d.geo !== "European Union - 27 countries (from 2020)" && d.siec !== "Total"
+    d => d.TIME_PERIOD === 2022 && d.geo !== "European Union - 27 countries (from 2020)" && d.siec !== "Total"
   );
 
   // Aggregate data by country and energy source
@@ -654,38 +618,16 @@ function renderChart(data, title) {
     ]
   });
 }
-
-// Render both charts
-function renderCharts() {
-  // Render production chart
-  document.getElementById("productionChartContainer").innerHTML = ""; 
-  document.getElementById("productionChartContainer").appendChild(
-    resize((width) => renderChart(energyProductionData, "Energy Production"))
-  );
-
-  // Render consumption chart
-  document.getElementById("consumptionChartContainer").innerHTML = ""; 
-  document.getElementById("consumptionChartContainer").appendChild(
-    resize((width) => renderChart(energyConsumptionData, "Energy Consumption"))
-  );
-}
-
-// Add year buttons and render the initial charts
-document.getElementById("yearButtonContainer").appendChild(yearButtons());
-// renderCharts();
-
 ```
 
-<div id="yearButtonContainer"></div>
-
 ```html
-<h2>Energy Production</h2>
-<div id="productionChartContainer">
-  ${resize((width) => renderChart(energyProductionData, "Energy Production"))}
-</div>
-<h2>Energy Consumption</h2>
-<div id="consumptionChartContainer">
-  ${resize((width) => renderChart(energyConsumptionData, "Energy Consumption"))}
+<div class="grid grid-cols-2">
+  <div class="card" id="histogram">
+    ${resize((width) => renderChart(energyProductionData, "Energy Production"))}
+  </div>
+  <div class="card" id="histogram">
+    ${resize((width) => renderChart(energyConsumptionData, "Energy Consumption"))}
+  </div>
 </div>
 
 <div class="bottom-text">
