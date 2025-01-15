@@ -526,8 +526,12 @@ function plotGDP(data, {width}) {
 ```js
 
 // Load the energy data from both files
-const energyConsumptionData = await FileAttachment("data/2020-2023_EU_energy_consumption.csv").csv({typed: true});
-const energyProductionData = await FileAttachment("data/2020-2023_EU_energy_production.csv").csv({typed: true});
+const energyConsumptionDataAllCountries = await FileAttachment("data/2020-2023_EU_energy_consumption.csv").csv({typed: true});
+const energyProductionDataAllCountries = await FileAttachment("data/2020-2023_EU_energy_production.csv").csv({typed: true});
+
+const energyConsumptionData = energyConsumptionDataAllCountries.filter((d) => countryNamesToEU27Codes.has(d.geo));
+
+const energyProductionData = energyProductionDataAllCountries.filter((d) => countryNamesToEU27Codes.has(d.geo));
 
 // Default year for both graphs
 let selectedYear = 2022; 
