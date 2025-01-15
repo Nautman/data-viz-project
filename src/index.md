@@ -213,7 +213,6 @@ const addClick = (index, scales, values, dimensions, context, next) => {
 function plot2D(data, {width}) {
   return Plot.plot({
     width,
-    height: 300,
     // start at 0,0 go to 3,3
     x: {label: "PCA 1"},
     y: {label: "PCA 2"},
@@ -301,9 +300,12 @@ console.log(selectedQuestion);
 ```
 
 ```html
-<div class="grid grid-cols-1">
+<div class="grid grid-cols-2">
   <div class="card" id="histogram">
     ${resize((width) => plot2D(pca_data[selectedQuestion.id], {width}))}
+  </div>
+  <div class="card" id="histogram">
+    ${resize((width) => plotHistogram(histogramData, {width}))}
   </div>
 </div>
 ```
@@ -451,14 +453,6 @@ const plotHistogram = (
 }
 ```
 
-```html
-<div class="grid grid-cols-1">
-  <div class="card" id="histogram">
-    ${resize((width) => plotHistogram(histogramData, {width}))}
-  </div>
-</div>
-```
-
 ```js
 
 const selectedCountriesPriceData = countries.map((code => energyPricesPerCountryCode.get(code) ?? [])).flat();
@@ -482,9 +476,12 @@ function plotPrices(data, {width}) {
 ```
 
 ```html
-<div class="grid grid-cols-1">
+<div class="grid grid-cols-2">
   <div class="card" id="prices">
     ${resize((width) => plotPrices(selectedCountriesPriceData, {width}))}
+  </div>
+  <div class="card" id="gdp">
+    ${resize((width) => plotGDP(selectedCountriesGDPData, {width}))}
   </div>
 </div>
 ```
@@ -512,14 +509,6 @@ function plotGDP(data, {width}) {
   });
 }
 
-```
-
-```html
-<div class="grid grid-cols-1">
-  <div class="card" id="gdp">
-    ${resize((width) => plotGDP(selectedCountriesGDPData, {width}))}
-  </div>
-</div>
 ```
 
 
