@@ -2,6 +2,7 @@
 theme: dashboard
 title: European Attitudes 
 toc: false
+sidebar: false
 ---
 
 <div class="hero">
@@ -64,6 +65,25 @@ toc: false
 .countrydot {
   cursor: pointer;
 }
+
+.floating-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border-top: 1px solid #ccc;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.floating-bar-content {
+  width: 80%;
+}
+
+
 
 </style>
 
@@ -230,17 +250,55 @@ const questionTitlesMap = new Map(Object.entries(data)
 
 ```js
 
+// const questionTitlesListWithCategoryLabels = 
+//   Object.entries(data)
+//     .filter(([k, v]) => !k.endsWith("T"))
+//     .map(([k, v]) => [k, {...v, id: k}])
+//     .map(([k, v]) => {
+//       const category = k.split("_")[0];
+//       return [k, {...v, category, id: k}];
+//     });
+
+
 const selectedQuestion = view(
   Inputs.select(
     questionTitlesMap,
     {
       format: ([k, v]) => v.title,
       value: questionTitlesMap.get("QC1"),
+      width: "100%"
     }
   )
 );
 ```
 
+```js
+console.log(selectedQuestion);
+```
+
+```html
+<h1 style="width: 100%; font-size: 1.5rem;  max-width: none;">
+  ${selectedQuestion.title}
+</h1>
+<h2>
+  ${selectedQuestion.subtitle}
+</h2>
+
+<!-- floating bar on bottom of the screen -->
+<div class="floating-bar">
+  <div class="floating-bar-content">
+    <h3>Investigated question</h3>
+    <div style="width: 80%">
+      <b>
+        ${selectedQuestion.title}
+      </b>
+      <div>
+        ${selectedQuestion.subtitle}
+      </div>
+    </div>
+  </div>
+</div>
+```
 
 ```html
 <div class="grid grid-cols-1">
