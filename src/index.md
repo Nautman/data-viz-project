@@ -12,6 +12,17 @@ sidebar: false
 
 <style type="text/css">
 
+.chip {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  margin: 0.1rem;
+  border-radius: 9999px;
+  border: 1px solid #007BFF;
+  background-color: #f8f9fa;
+  color: #007BFF;
+  cursor: pointer;
+}
+
 .hero {
   display: flex;
   flex-direction: column;
@@ -125,6 +136,7 @@ const EU27CodesToCountry = new Map(Object.entries({
 }));
 
 const countryNamesToEU27Codes = new Map(Array.from(EU27CodesToCountry.entries()).map(([k, v]) => [v, k]));
+
 
 
 ```
@@ -271,10 +283,6 @@ const selectedQuestion = view(
 );
 ```
 
-```js
-console.log(selectedQuestion);
-```
-
 ```html
 <h1 style="width: 100%; font-size: 1.5rem;  max-width: none;">
   ${selectedQuestion.title}
@@ -298,6 +306,21 @@ console.log(selectedQuestion);
   </div>
 </div>
 ```
+
+```html
+<div class="chip-container">
+  <!-- countries that can be selected / deselected -->
+  ${EU27CodesToCountry.entries().map(([code, country]) => {
+    return html`
+      <button class="chip" style="background-color: ${countries.includes(code) ? "#007BFF" : "#f8f9fa"}; color: ${countries.includes(code) ? "#fff" : "#000"}" onclick=${() => addOrRemoveCountry(code)}>
+        ${country}
+      </button>
+    `;
+  })}
+</div>
+
+```
+
 
 ```html
 <div class="grid grid-cols-2">
