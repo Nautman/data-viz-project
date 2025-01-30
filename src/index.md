@@ -8,6 +8,9 @@ sidebar: false
 <div class="hero">
   <h1>European Attitudes toward EU Energy Policies</h1>
   <h2>Each year, the EU gather each country's opinions in energy matters and the EU strategies. Use these graphs to explore where each country stands today, and compare the attitudes to other EU data, such as GDP, energy consumption, and more.</h2>
+  <p></p>
+  <p>
+ <strong>How to Use This Visualization: </strong> Start by exploring European citizens' opinions by selecting questions and analyze summarized responses to identify patterns or outliers in the Principal Component Analysis (PCA) plot. PCA helps you explore the variations in responses quickly. By looking at how data points are positioned relative to each other, you can easily identify countries with similar or divergent opinions on a particular question. For example, countries that are located close together on one axis of the plot have similar responses, while those that are farther apart have differing opinions. The x-axis (PCA 1) and the y-axis (PCA 2) represent the main directions of variation in the data. Once you spot a pattern, you can dive deeper into the next visualization to investigate specific responses from individual countries. Form hypotheses on why countries show similarities or differences in their responses. Compare GDP, energy consumption, and production data to investigate trends over time.</p>
 </div>
 
 <style type="text/css">
@@ -55,7 +58,10 @@ sidebar: false
   line-height: 1.5;
   color: var(--theme-foreground-muted);
 }
-
+.hero p {
+      font-size: 12px;
+      color: var(--theme-foreground-muted);
+}
 .bottom-text {
   display: flex;
   flex-direction: column;
@@ -224,6 +230,7 @@ const addClick = (index, scales, values, dimensions, context, next) => {
 
 function plot2D(data, {width}) {
   return Plot.plot({
+    title: "PCA Plot",
     width,
     // start at 0,0 go to 3,3
     x: {label: "PCA 1"},
@@ -445,6 +452,7 @@ const plotHistogram = (
   data, {width}
 ) => {
   return Plot.plot({
+    title: "Detailed Answers",
     width,
     x: {label: "Country"},
     y: {tickFormat: "s", tickSpacing: 50, label: "Fraction of respondents"},
