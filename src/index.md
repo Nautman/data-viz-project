@@ -640,6 +640,12 @@ function renderChart(data, title) {
 
 <div class="bottom-text">
 <h4> This website was created by Douglas Bengtsson, Elena Bank, Julia Böckert & Pravesha Ramsundersingh.</h4>
+<h4>Dataset sources:</h4>
+<a href="https://data.europa.eu/data/datasets/s3229_101_4_sp555_eng?locale=en">European’s attitudes towards energy policies</a>
+<a href="https://ec.europa.eu/eurostat/databrowser/view/sdg_08_10/default/line?lang=en">Real GDP per capita</a>
+<a href="https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Electricity_price_statistics">Electricity price statistics</a>
+<a href="https://ec.europa.eu/eurostat/web/interactive-publications/energy-2023">Energy production and consumption</a>
+
 </div>
 
 ```
