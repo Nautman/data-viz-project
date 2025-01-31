@@ -1,0 +1,2 @@
+Julia:
+I've learnt so much from the course and from my team mates. We have efficiently divided the search for datasets, and implemenation in the code. We had a few iterations of design suggestions, both on paper and digitally, before implementing in code. Everyone in the group was ambitios and took responsibility for their own part, while still collaborating and taking advice from each other. In the end, we came to a good agreement on color scheme and design of components. I was responsible for the data processing and implementation of energy prices and GDP.
