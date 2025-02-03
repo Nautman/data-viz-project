@@ -1,0 +1,6 @@
+### General Workload
+This project provided an excellent balance of workload and learning opportunities. The lessons, engaging papers and slides, and supportive labs were helpful in understanding key concepts. The organisation and even distribution of deadlines made it manageable to deliver quality work throughout the project timeline.
+### Group Collaboration
+Collaborating with my project group was a really good experience! The open and supportive environment allowed everyone to share ideas freely, allowing for creativity and ensuring that all team members could contribute effectively. I felt comfortable expressing my thoughts, and the group worked great together.
+### Individual Contribution
+My contributions to the project included active participation in the initial design process, identifying relevant datasets, and implementing the energy consumption/production stacked bar chart. I also contributed to writing the corresponding sections of the report and producing the project video. Beyond my specific tasks, I assisted with brainstorming ideas for other graphs and ensuring the overall connectivity and coherence of the dashboard. This project not only strengthened my technical skills but also reinforced the value of collaboration and teamwork in achieving shared goals.

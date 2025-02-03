@@ -1,0 +1,2 @@
+Elena: 
+My group and I collaborated effectively, making it easy to organize meetings and divide tasks. From the initial discussions on dataset selection to deciding on the attitudes dataset, prototyping, and implementation, all major steps were carried out as a team through in-person meetings. My primary responsibilities included processing the "attitudes" dataset, generating the PCA data, implementing the PCA graph and writing the corresponding sections in the report. 
